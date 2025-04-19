@@ -19,10 +19,15 @@
 #include "absl/memory/memory.h"
 #include "cartographer/io/color.h"
 #include "cartographer/io/proto_stream.h"
+#include "cartographer/mapping/internal/2d/pose_graph_2d.h"
+
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros_msgs/msg/status_code.hpp"
 #include "cartographer_ros_msgs/msg/status_response.hpp"
+
+#include "ament_index_cpp/get_package_share_directory.hpp"
+#include "rcpputils/filesystem_helper.hpp"
 
 namespace cartographer_ros {
 namespace {
@@ -103,7 +108,20 @@ MapBuilderBridge::MapBuilderBridge(
     tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
       map_builder_(std::move(map_builder)),
-      tf_buffer_(tf_buffer) {}
+      tf_buffer_(tf_buffer) {
+
+  auto* pose_graph_interface = map_builder_->pose_graph();
+  auto* pose_graph_2d = dynamic_cast<cartographer::mapping::PoseGraph2D*>(
+      pose_graph_interface);
+  if (pose_graph_2d != nullptr) {
+    std::string yaml_path = ament_index_cpp::get_package_share_directory("cartographer_ros") + "/configuration_files/furrow.yaml";
+    if (rcpputils::fs::exists(yaml_path)) {
+      pose_graph_2d->LoadFurrowLayoutFromYaml(yaml_path);
+    }
+  }
+
+
+}
 
 void MapBuilderBridge::LoadState(const std::string& state_filename,
                                  bool load_frozen_state) {

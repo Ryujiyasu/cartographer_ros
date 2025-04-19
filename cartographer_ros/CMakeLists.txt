@@ -54,6 +54,8 @@ include_directories(
   include
   ${PCL_INCLUDE_DIRS}
   ${urdfdom_headers_INCLUDE_DIRS}
+  ../../cartographer  # ← これを追加！カートグラファーのパスに合わせる
+
 )
 
 # Library
